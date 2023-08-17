@@ -2,22 +2,9 @@ import os
 import subprocess
 from Utils import detectLanguageOfFile
 
-
-mkvinfoPath1 = os.path.join("resources", "tools", "mkvinfo")
-mkvextractPath1 = os.path.join("resources", "tools", "mkvextract")
-
-mkvinfoPath2 = os.path.join("..", "resources", "tools", "mkvinfo")
-mkvextractPath2 = os.path.join("..", "resources", "tools", "mkvextract")
-
-if os.path.exists(mkvinfoPath1):
-    mkvinfo = mkvinfoPath1
-else:
-    mkvinfo = mkvinfoPath2
-
-if os.path.exists(mkvextractPath1):
-    mkvextract = mkvextractPath1
-else:
-    mkvextract = mkvextractPath2
+dir = os.path.dirname(os.path.realpath(__file__))
+mkvinfo = os.path.join(dir, "mkvinfo")
+mkvextract = os.path.join(dir, "mkvextract")
 
 
 def getSubtitleTrackIDsFromMKV(file):

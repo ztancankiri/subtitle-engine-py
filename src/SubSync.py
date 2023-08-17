@@ -199,20 +199,14 @@ class App(object):
 
 
 def sync(subPath, subLang, refPath, refLang):
-    subsyncPath1 = os.path.join("resources", "subsync")
-    subsyncPath2 = os.path.join("..", "resources", "subsync")
-
-    if (os.path.exists(subsyncPath1)):
-        config.configdir = subsyncPath1
-        config.shareddir = subsyncPath1
-    else:
-        config.configdir = subsyncPath2
-        config.shareddir = subsyncPath2
+    dir = os.path.dirname(os.path.realpath(__file__))
+    config.configdir = os.path.join(dir, "assets")
+    config.shareddir = os.path.join(dir, "assets")
 
     config.configpath = os.path.join(
         config.configdir, f"{config.appname}.json")
+    config.assetdir = os.path.join(config.shareddir, ".")
     config.assetspath = os.path.join(config.configdir, "assets.json")
-    config.assetdir = os.path.join(config.shareddir, "assets")
 
     outputFileName = f"{uuid()}.srt"
     outputDir = os.path.dirname(subPath)

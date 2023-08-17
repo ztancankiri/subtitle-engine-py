@@ -109,15 +109,7 @@ WORKDIR /work/resources/tools
 COPY --from=mkvtoolnix /mkvextract .
 COPY --from=mkvtoolnix /mkvinfo .
 
-WORKDIR /work
-COPY make.sh .
-COPY requirements.txt .
-
-WORKDIR /work/src
-COPY src/*.py .
-
 WORKDIR /repos
-
 RUN apk update \
     && apk add gcc g++ make python3-dev py3-pip git curl wget swig libffi-dev libdrm-dev openssl-dev \
     pulseaudio-dev alsa-lib-dev ffmpeg-dev libxcb-dev mesa-dev autoconf automake libtool bison unzip \
@@ -145,10 +137,14 @@ RUN apk update \
     && ldd build/lib*cpython*/gizmo*.so | grep -o '/[^ ]*' | xargs -I '{}' cp -n '{}' /work/resources/libs \
     && rm -rf /work/resources/libs/ld*.so* \
     && cp subsync/key.pub /work/resources/ \
-    && cd / && rm -rf /repos \
-    && cd /work && chmod +x make.sh && ./make.sh \
-    && mv /work/dist/main /engine \
-    && rm -rf /work
+    && cd / && rm -rf /repos
+
+WORKDIR /work
+COPY make.sh .
+COPY engine.spec .
+COPY requirements.txt .
+COPY src/*.py src/
+RUN chmod +x make.sh && ./make.sh && mv /work/dist/main /engine && rm -rf /work
 
 FROM alpine
 
