@@ -2,9 +2,9 @@ FROM alpine AS mkvtoolnix
 
 WORKDIR /repos
 
-RUN apk update && apk add gcc g++ linux-headers make cmake ruby-rake python3-dev autoconf automake libtool lld pkgconfig curl wget git docbook-xsl
-
-RUN cd /repos \
+RUN apk update \
+    && apk add gcc g++ linux-headers make cmake ruby-rake python3-dev autoconf automake libtool lld pkgconfig curl wget git docbook-xsl \
+    && cd /repos \
     && git clone --depth 1 https://github.com/gcp/libogg.git \
     && cd libogg \
     && ./autogen.sh \
@@ -105,12 +105,23 @@ RUN cd /repos \
 
 FROM alpine AS subsync
 
+WORKDIR /work/resources/tools
+COPY --from=mkvtoolnix /mkvextract .
+COPY --from=mkvtoolnix /mkvinfo .
+
+WORKDIR /work
+COPY make.sh .
+COPY requirements.txt .
+
+WORKDIR /work/src
+COPY src/*.py .
+
 WORKDIR /repos
 
 RUN apk update \
-    && apk add gcc g++ make python3-dev py3-pip git curl swig libffi-dev libdrm-dev openssl-dev \
-    pulseaudio-dev alsa-lib-dev ffmpeg-dev libxcb-dev mesa-dev autoconf automake libtool bison \
-    && mkdir -p /repos && mkdir -p /standalone/libs \
+    && apk add gcc g++ make python3-dev py3-pip git curl wget swig libffi-dev libdrm-dev openssl-dev \
+    pulseaudio-dev alsa-lib-dev ffmpeg-dev libxcb-dev mesa-dev autoconf automake libtool bison unzip \
+    && mkdir -p /repos \
     && cd /repos \
     && git clone --depth 1 https://github.com/cmusphinx/sphinxbase.git \
     && cd sphinxbase \
@@ -130,23 +141,16 @@ RUN apk update \
     && export CRYPTOGRAPHY_DONT_BUILD_RUST=1 \
     && pip install --no-binary :all: "cryptography<3.5" \
     && pip install . \
-    && ldd build/lib*cpython*/gizmo*.so | grep -o '/[^ ]*' | xargs -I '{}' cp -n '{}' /standalone/libs \
-    && rm -rf /standalone/libs/ld*.so* \
-    && cp subsync/key.pub /standalone/ \
-    && cd / && rm -rf /repos
+    && mkdir -p /work/resources/libs \
+    && ldd build/lib*cpython*/gizmo*.so | grep -o '/[^ ]*' | xargs -I '{}' cp -n '{}' /work/resources/libs \
+    && rm -rf /work/resources/libs/ld*.so* \
+    && cp subsync/key.pub /work/resources/ \
+    && cd / && rm -rf /repos \
+    && cd /work && chmod +x make.sh && ./make.sh \
+    && mv /work/dist/main /engine \
+    && rm -rf /work
 
-WORKDIR /standalone/tools
-COPY --from=mkvtoolnix /mkvextract .
-COPY --from=mkvtoolnix /mkvinfo .
+FROM alpine
 
-# && pip install pyinstaller \
-# && pyinstaller --onefile --add-binary "/standalone/libs/*.so*:." --add-data "/standalone/key.pub:." /usr/bin/subsync \
-# && mv /standalone/dist/subsync /subsync \
-# && cd / && rm -rf /standalone
-
-# FROM alpine
-
-# WORKDIR /app
-# COPY --from=mkvtoolnix /mkvextract .
-# COPY --from=mkvtoolnix /mkvinfo .
-# COPY --from=builder-subsync /subsync .
+WORKDIR /app
+COPY --from=subsync /engine .

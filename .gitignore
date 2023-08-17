@@ -129,3 +129,5 @@ resources/
 *.spec
 .vscode/
 .DS_Store
+dist/
+build/

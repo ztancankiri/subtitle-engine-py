@@ -167,12 +167,12 @@ def checkAndFixLocalSubFileName(file, lang):
     return False
 
 
-def xml_to_dict(self, element):
+def xml_to_dict(element):
     if len(element) == 0 and element.text is not None:
         return element.text
     result = {}
     for child in element:
-        child_data = self.xml_to_dict(child)
+        child_data = xml_to_dict(child)
         if child.tag in result:
             if type(result[child.tag]) is list:
                 result[child.tag].append(child_data)
