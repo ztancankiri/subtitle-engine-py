@@ -157,18 +157,18 @@ class OpenSubtitles:
             query = info["title"]
 
             if ("year" in info):
-                query += " " + info["year"]
+                query += " " + str(info["year"])
 
             if ("screen_size" in info and len(info["screen_size"]) > 0):
-                query += " " + info["screen_size"]
+                query += " " + str(info["screen_size"])
 
             if ("source" in info and len(info["source"]) > 0):
-                query += " " + info["source"]
+                query += " " + str(info["source"])
         elif (info["type"] == "episode"):
-            query = info["title"]
+            query = str(info["title"])
 
             if ("screen_size" in info and len(info["screen_size"]) > 0):
-                query += " " + info["screen_size"]
+                query += " " + str(info["screen_size"])
 
             if ("season" in info):
                 season = info["season"]
