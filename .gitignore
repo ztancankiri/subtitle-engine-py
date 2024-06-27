@@ -130,3 +130,5 @@ resources/
 .DS_Store
 dist/
 build/
+*.pyc
+*/assets/

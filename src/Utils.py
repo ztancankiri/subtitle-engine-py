@@ -213,3 +213,31 @@ def convertToUTF8BOM(buffer):
 
     content = buffer.decode(detectedEncoding)
     return bom_prefix + content.encode(targetEncoding)
+
+
+def levenshteinDistance(string1, string2):
+    m = len(string1)
+    n = len(string2)
+
+    matrix = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(m + 1):
+        matrix[i][0] = i
+
+    for j in range(n + 1):
+        matrix[0][j] = j
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            cost = 1 if string1[i - 1] != string2[j - 1] else 0
+            matrix[i][j] = min(matrix[i - 1][j] + 1, matrix[i]
+                               [j - 1] + 1, matrix[i - 1][j - 1] + cost)
+
+    return matrix[m][n]
+
+
+def calculateSimilarityPercentage(string1, string2):
+    distance = levenshteinDistance(string1, string2)
+    max_length = max(len(string1), len(string2))
+    similarity_percentage = ((max_length - distance) / max_length) * 100
+    return round(similarity_percentage, 2)

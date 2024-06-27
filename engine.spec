@@ -4,7 +4,7 @@ import os
 import glob
 
 datas = [('resources/key.pub', '.')]
-binaries = [('resources/libs/*.so*', '.'), ('resources/tools/*', '.')]
+binaries = [('resources/libs/*.so*', '.')]
 hiddenimports = []
 tmp_ret = collect_all('babelfish')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]

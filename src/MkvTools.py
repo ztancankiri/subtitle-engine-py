@@ -1,26 +1,19 @@
+import subextractor
+import json
 import os
-import subprocess
 from Utils import detectLanguageOfFile
 
 dir = os.path.dirname(os.path.realpath(__file__))
-mkvinfo = os.path.join(dir, "mkvinfo")
-mkvextract = os.path.join(dir, "mkvextract")
 
 
 def getSubtitleTrackIDsFromMKV(file):
     print(f"Retrieving subtitle track IDs of {file}")
 
-    process = subprocess.Popen(
-        [mkvinfo, file], stdout=subprocess.PIPE, text=True)
-    stdout, _ = process.communicate()
+    info = json.loads(subextractor.extract_info(file))
+    tracks = list(
+        filter(lambda item: item["codec_id"] == "SubRip subtitle", info))
 
-    trackIDs = stdout.replace("\n", "").split(
-        "|+ Tracks")[1].split("| + Track")
-    trackIDs = list(filter(lambda item: len(item) > 0, trackIDs))
-    trackIDs = list(map(lambda item: f"SUB|{item[0]}" if (
-        "Track type: subtitles" in item[1]) else item, enumerate(trackIDs)))
-    trackIDs = list(filter(lambda item: "SUB|" in item, trackIDs))
-    trackIDs = list(map(lambda item: int(item.split("|")[1]), trackIDs))
+    trackIDs = list(map(lambda item: item["index"], tracks))
 
     if len(trackIDs) > 0:
         print(f"Subtitle track IDs of {file} are retrieved")
@@ -33,11 +26,9 @@ def getSubtitleTrackIDsFromMKV(file):
 def extractSubtitleFromMKV(file, trackId, subPath):
     print(f"Extracting subtitle track {trackId} of {file}")
 
-    process = subprocess.Popen(
-        [mkvextract, "tracks", file, f"{trackId}:{subPath}"], stdout=subprocess.PIPE, text=True)
-    stdout, _ = process.communicate()
+    result = subextractor.extract_stream(file, trackId, subPath)
 
-    if "Progress: 100%" in stdout:
+    if result:
         print(f"Subtitle track {trackId} of {file} is extracted")
         return True
     else:
@@ -49,7 +40,7 @@ def extractSubtitleOfLanguageFromMKV(file, lang, subPath):
     trackIDs = getSubtitleTrackIDsFromMKV(file)
 
     for trackId in trackIDs:
-        sub = f"{subPath}.track.{trackId}"
+        sub = f"{subPath}.track.{trackId}.srt"
 
         if extractSubtitleFromMKV(file, trackId, sub):
             if detectLanguageOfFile(sub) == lang:

@@ -1,8 +1,11 @@
 import os
 from OpenSubtitles import OpenSubtitles
 from SubSync import sync
-from Utils import findLocalSub, checkAndFixLocalSubFileName
+from Utils import findLocalSub, checkAndFixLocalSubFileName, levenshteinDistance, calculateSimilarityPercentage
 from MkvTools import extractSrtByLangFromMKV
+
+import time
+import guessit
 
 from Node import Node
 
@@ -128,6 +131,7 @@ def getEnSrtByName(file):
         return False
 
     bestMatch = matches[0]
+    print(bestMatch)
     foundSubtitles = opensub.download(bestMatch["ZipDownloadLink"])
 
     if (len(foundSubtitles) > 0):
@@ -153,11 +157,33 @@ def getTrSrtByName(file):
     matches = list(filter(
         lambda item: item["SubLanguageID"] == "tur" and item["SubFormat"] == "srt", results))
 
+    def tokenize(item):
+        info = dict(guessit.guessit(item))
+        result = ""
+
+        if "title" in info:
+            result += str(info["title"]) + '.'
+
+        if "year" in info:
+            result += str(info["year"]) + '.'
+
+        if "source" in info:
+            result += str(info["source"]) + '.'
+
+        if "video_codec" in info:
+            result += str(info["video_codec"]) + '.'
+
+        return result[:-1].replace(" ", ".")
+
     if (len(matches) == 0):
         print("No match!")
         return False
 
+    matches.sort(key=lambda item: calculateSimilarityPercentage(
+        tokenize(item["SubFileName"]), tokenize(file)), reverse=True)
+
     bestMatch = matches[0]
+    print(bestMatch)
     foundSubtitles = opensub.download(bestMatch["ZipDownloadLink"])
 
     if (len(foundSubtitles) > 0):
@@ -185,6 +211,7 @@ def subsyncTrSrtWithEnSrt(file):
         if (os.path.exists(syncedSubFile)):
             os.unlink(syncedSubFile)
         return False
+    return False
 
 
 def subsyncEnSrtWithTrSrt(file):
@@ -201,6 +228,7 @@ def subsyncEnSrtWithTrSrt(file):
         if (os.path.exists(syncedSubFile)):
             os.unlink(syncedSubFile)
         return False
+    return False
 
 
 def subsyncEnSrtWithAudio(file):
@@ -217,6 +245,7 @@ def subsyncEnSrtWithAudio(file):
         if (os.path.exists(syncedSubFile)):
             os.unlink(syncedSubFile)
         return False
+    return False
 
 
 def subsyncTrSrtWithAudio(file):
@@ -233,6 +262,7 @@ def subsyncTrSrtWithAudio(file):
         if (os.path.exists(syncedSubFile)):
             os.unlink(syncedSubFile)
         return False
+    return False
 
 
 def readyEnSrt(file):
